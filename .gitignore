@@ -1,5 +1,4 @@
 ENV/
-csv/factory_variables.csv
-csv/monthly_demand.csv
+csv/tests
 tests/
 .idea/
