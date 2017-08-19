@@ -3,4 +3,3 @@ csv/factory_variables.csv
 csv/monthly_demand.csv
 tests/
 .idea/
-.gitignore
