@@ -1,0 +1,3 @@
+Questo software deve essere in grado di generare, tramite una tabella di prodotti con relativi valori nutrizionali e costi, 
+la dieta per una settimana, ottimizzando sul costo minimo, restando il più possibile vicino alle proporzioni di 
+valori nutrizionali impostati dall'utente. Per i giorni in cui i constraints sono uguali deve poter proporre diete diverse.
