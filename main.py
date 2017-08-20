@@ -104,7 +104,6 @@ class Application(ttk.Frame):
         rowid = self.tree_view.identify_row(event.y)
         column = self.tree_view.identify_column(event.x)
 
-        # get column position info
         xi, yi, width, height = self.tree_view.bbox(rowid, column)
         self.entryPopup = EntryPopup(self.tree_view, rowid, column)
         self.entryPopup.geometry('%dx%d+%d+%d' % (width, 50, x + xi - (width - width) / 2, y + yi + (50 - height) / 2))
@@ -128,12 +127,12 @@ class EntryPopup(tk.Toplevel):
         self.entry.focus()
         self.entry.pack(side='top', fill=tk.BOTH, expand=1)
         self.set_value(self.master_tree_view.item(rowid)['values'][self.c - 1])
-        #self.entry.bind("<Return>", self.update_master_tree_view())
+        self.entry.bind("<Return>", self.update_master_tree_view)
 
     def set_value(self, value):
         self.entry.insert(0, value)
 
-    def update_master_tree_view(self):
+    def update_master_tree_view(self, event=None):
         values = self.master_tree_view.item(self.rowid)['values']
         values[self.c - 1] = self.entry.get()
         self.master_tree_view.item(self.rowid, values=values)
