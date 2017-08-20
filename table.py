@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+import pandas
 
 struct = {'name': 'Name', 'quantity': 'Quantity (g)', 'calories': 'Calories (Kcal)',
           'carbohydrates': 'Carbohydrates (g)', 'proteins': 'Proteins (g)', 'fats': 'Fats (g)', 'price': 'Price (€)'}
@@ -31,17 +32,29 @@ class Table(ttk.Treeview):
         self.configure(yscrollcommand=scroll_bar.set)
         self.bind("<Double-1>", self.on_double_click)
 
-    def load_table(self, dataframe):
-        self.dataframe = dataframe
+    def load_table(self, file_name):
+        self.dataframe = pandas.read_csv(file_name)
         columns_list = list(self.dataframe)
 
         if columns_list != [str(x).title() for x in self.structure_keys_list]:
+            print("test")
             return None
         for i in range(len(self.dataframe)):
             values = []
             for j in range(len(self.structure_keys_list) - 1):
                 values.append(self.dataframe.iloc[i][j + 1])
             self.insert('', i, text=self.dataframe.iloc[i][0], values=tuple(values))
+
+    def save_table(self, file_name):
+        columns = [str(x).title() for x in self.structure_keys_list]
+        names = [self.item(i)['text'] for i in self.get_children()]
+        series = []
+        series.append(names)
+        series = series + [[self.item(i)['values'][j] for i in self.get_children()] for j in range(len(columns) - 1)]
+        indices = [x for x in range(len(self.get_children()))]
+        d = {col: pandas.Series(series[columns.index(col)], index=indices) for col in columns}
+        self.dataframe = pandas.DataFrame(d, columns=columns)
+        self.dataframe.to_csv(file_name, index=False)
 
     def clear(self):
         self.delete(*self.get_children())
@@ -76,14 +89,20 @@ class EntryPopup(tk.Toplevel):
         self.entry = ttk.Entry(self, justify='center')
         self.entry.focus()
         self.entry.pack(side='top', fill=tk.BOTH, expand=1)
-        self.set_value(self.parent_tree_view.item(rowid)['values'][self.c - 1])
+        if self.c > 0:
+            self.set_value(self.parent_tree_view.item(rowid)['values'][self.c - 1])
+        else:
+            self.set_value(self.parent_tree_view.item(rowid)['text'])
         self.entry.bind("<Return>", self.update_parent_tree_view)
 
     def set_value(self, value):
         self.entry.insert(0, value)
 
     def update_parent_tree_view(self, event=None):
-        values = self.parent_tree_view.item(self.rowid)['values']
-        values[self.c - 1] = self.entry.get()
-        self.parent_tree_view.item(self.rowid, values=values)
+        if self.c > 0:
+            values = self.parent_tree_view.item(self.rowid)['values']
+            values[self.c - 1] = self.entry.get()
+            self.parent_tree_view.item(self.rowid, values=values)
+        else:
+            self.parent_tree_view.item(self.rowid, text=self.entry.get())
         self.destroy()

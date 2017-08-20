@@ -1,7 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
-import pandas
 from constraints import ConstraintsWindow
 from table import Table
 
@@ -28,11 +27,10 @@ class Application(ttk.Frame):
 
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.file_menu.add_command(label="New", command=(lambda: self.table.clear()))
-        self.file_menu.add_command(label="Open...", command=self.load_file)
-        self.file_menu.add_command(label="Save")
+        self.file_menu.add_command(label="Open...", command=self.open_file)
+        self.file_menu.add_command(label="Save", command=self.save_file)
         self.file_menu.entryconfig('Save', state="disabled")
-        self.file_menu.add_command(label="Save As...")
-        self.file_menu.entryconfig('Save As...', state="disabled")
+        self.file_menu.add_command(label="Save As...", command=self.save_as_file)
         self.file_menu.add_separator()
 
         self.constraints_menu = tk.Menu(self.menu_bar, tearoff=0)
@@ -55,16 +53,25 @@ class Application(ttk.Frame):
 
         self.parent.config(menu=self.menu_bar)
         self.table = Table(self.parent)
-        # self.create_table()
 
-    def load_file(self):
+    def open_file(self):
         self.file_name = filedialog.askopenfilename(filetypes=[("CSV files (*.csv)", "*.csv")])
         if self.file_name is not '':
-            self.dataframe = pandas.read_csv(self.file_name)
             self.table.clear()
-            self.table.load_table(self.dataframe)
+            self.table.load_table(self.file_name)
+            self.file_menu.entryconfig('Save', state="normal")
             self.menu_bar.entryconfig('Run', state="normal")
             self.menu_bar.entryconfig('Edit', state="normal")
+
+    def save_file(self):
+        if self.file_name is not None:
+            self.table.save_table(self.file_name)
+
+    def save_as_file(self):
+        save_as_file_name = filedialog.asksaveasfilename(filetypes=[("CSV files (*.csv)", "*.csv")],
+                                                         defaultextension='.csv') 
+        if save_as_file_name is not '':
+            self.table.save_table(save_as_file_name)
 
     def open_constraints_window(self):
         self.constraints_window = ConstraintsWindow(self.parent)
