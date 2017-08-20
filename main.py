@@ -6,7 +6,7 @@ from constraints import ConstraintsWindow
 
 
 class Application(ttk.Frame):
-    def __init__(self, parent=None,  **kwargs):
+    def __init__(self, parent=None, **kwargs):
         ttk.Frame.__init__(self, **kwargs)
         self.parent = parent
         self.menu_bar = None
@@ -25,6 +25,7 @@ class Application(ttk.Frame):
         self.menu_bar = tk.Menu(self)
 
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
+        self.file_menu.add_command(label="New", command=(lambda: self.tree_view.delete(*self.tree_view.get_children())))
         self.file_menu.add_command(label="Open...", command=self.load_file)
         self.file_menu.add_command(label="Save")
         self.file_menu.add_command(label="Save As...")
@@ -85,12 +86,12 @@ class Application(ttk.Frame):
             self.table = pandas.read_csv(self.file_name)
             self.tree_view.delete(*self.tree_view.get_children())
             for i in range(len(self.table)):
-                self.tree_view.insert('', 'end', text=self.table.iloc[i]['Name'], values=(self.table.iloc[i][1],
-                                                                                          self.table.iloc[i][2],
-                                                                                          self.table.iloc[i][3],
-                                                                                          self.table.iloc[i][4],
-                                                                                          self.table.iloc[i][5],
-                                                                                          self.table.iloc[i][6]))
+                self.tree_view.insert('', i, text=self.table.iloc[i]['Name'] + str(i), values=(self.table.iloc[i][1],
+                                                                                               self.table.iloc[i][2],
+                                                                                               self.table.iloc[i][3],
+                                                                                               self.table.iloc[i][4],
+                                                                                               self.table.iloc[i][5],
+                                                                                               self.table.iloc[i][6]))
             self.menu_bar.entryconfig('Run', state="normal")
             self.menu_bar.entryconfig('Edit', state="normal")
 
@@ -98,31 +99,45 @@ class Application(ttk.Frame):
         self.constraints_window = ConstraintsWindow(self.parent)
 
     def on_double_click(self, event):
-        self.entryPopup = EntryPopup(self)
+        x = self.master.winfo_x()
+        y = self.master.winfo_y()
+        rowid = self.tree_view.identify_row(event.y)
+        column = self.tree_view.identify_column(event.x)
+
+        # get column position info
+        xi, yi, width, height = self.tree_view.bbox(rowid, column)
+        self.entryPopup = EntryPopup(self.tree_view, rowid, column)
+        self.entryPopup.geometry('%dx%d+%d+%d' % (width, 50, x + xi - (width - width) / 2, y + yi + (50 - height) / 2))
 
 
 class EntryPopup(tk.Toplevel):
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, master_tree_view, rowid, column, *args, **kwargs):
         tk.Toplevel.__init__(self, *args, **kwargs)
+        self.master_tree_view = master_tree_view
+        self.rowid = rowid
+        self.column = column
+        s = str(self.column).replace('#', '')
+        self.c = int(s)
+        self.attributes("-toolwindow", 1)
         self.title("Edit")
-        self.label = None
+        self.resizable(width=0, height=0)
         self.entry = None
-        tk.Grid.rowconfigure(self, 0, weight=1)
-        tk.Grid.columnconfigure(self, 0, weight=1)
 
-        # Create a 5x10 (rows x columns) grid of buttons inside the frame
-        for row_index in range(5):
-            tk.Grid.rowconfigure(self, row_index, weight=1)
-            for col_index in range(2):
-                if col_index == 0:
-                    tk.Grid.columnconfigure(self, col_index, weight=1)
-                    label = ttk.Label(self, text="Text", anchor=tk.CENTER, padding="5 5 5 5")
-                    label.grid(row=row_index, column=col_index, sticky=tk.N + tk.S + tk.E + tk.W)
-                else:
-                    tk.Grid.columnconfigure(self, col_index, weight=1)
-                    entry = ttk.Entry(self)
-                    entry.grid(row=row_index, column=col_index, sticky=tk.N + tk.S + tk.E + tk.W)
+        ttk.Button(self, text="Update", command=self.update_master_tree_view).pack(side='bottom')
+        self.entry = ttk.Entry(self, justify='center')
+        self.entry.focus()
+        self.entry.pack(side='top', fill=tk.BOTH, expand=1)
+        self.set_value(self.master_tree_view.item(rowid)['values'][self.c - 1])
+        #self.entry.bind("<Return>", self.update_master_tree_view())
+
+    def set_value(self, value):
+        self.entry.insert(0, value)
+
+    def update_master_tree_view(self):
+        values = self.master_tree_view.item(self.rowid)['values']
+        values[self.c - 1] = self.entry.get()
+        self.master_tree_view.item(self.rowid, values=values)
+        self.destroy()
 
 
 def main(name):
