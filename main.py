@@ -57,34 +57,6 @@ class Application(ttk.Frame):
         self.table = Table(self.parent)
         # self.create_table()
 
-    def create_table(self):
-        tv = ttk.Treeview(self.parent, selectmode='browse')
-        tv['columns'] = ('quantity', 'calories', 'carbohydrates', 'proteins', 'fats', 'price')
-        tv.heading("#0", text='Name', anchor='w')
-        tv.column("#0", anchor='w', width=100)
-        tv.heading('quantity', text='Quantity (g)')
-        tv.column('quantity', anchor='center', width=100)
-        tv.heading('calories', text='Calories (Kcal)')
-        tv.column('calories', anchor='center', width=100)
-        tv.heading('carbohydrates', text='Carbohydrates (g)')
-        tv.column('carbohydrates', anchor='center', width=150)
-        tv.heading('proteins', text='Proteins (g)')
-        tv.column('proteins', anchor='center', width=100)
-        tv.heading('fats', text='Fats (g)')
-        tv.column('fats', anchor='center', width=100)
-        tv.heading('price', text='Price (€)')
-        tv.column('price', anchor='center', width=100)
-        self.tree_view = tv
-        self.tree_view.pack(side='left', fill=tk.BOTH, expand=1)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        self.parent.grid_rowconfigure(0, weight=1)
-        self.parent.grid_columnconfigure(0, weight=1)
-        vsb = ttk.Scrollbar(self.parent, orient="vertical", command=self.tree_view.yview)
-        vsb.pack(side='right', fill='y')
-        self.tree_view.configure(yscrollcommand=vsb.set)
-        self.tree_view.bind("<Double-1>", self.on_double_click)
-
     def load_file(self):
         self.file_name = filedialog.askopenfilename(filetypes=[("CSV files (*.csv)", "*.csv")])
         if self.file_name is not '':

@@ -47,6 +47,8 @@ class Table(ttk.Treeview):
         self.delete(*self.get_children())
 
     def on_double_click(self, event):
+        if self.entry_popup is not None:
+            self.entry_popup.destroy()
         x = self.master.winfo_x()
         y = self.master.winfo_y()
         rowid = self.identify_row(event.y)
