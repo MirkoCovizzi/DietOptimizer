@@ -31,6 +31,7 @@ class Table(ttk.Treeview):
         scroll_bar.pack(side='right', fill='y')
         self.configure(yscrollcommand=scroll_bar.set)
         self.bind("<Double-1>", self.on_double_click)
+        self.bind("<Delete>", self.on_delete)
 
     def load_table(self, file_name):
         self.dataframe = pandas.read_csv(file_name)
@@ -59,6 +60,10 @@ class Table(ttk.Treeview):
     def clear(self):
         self.delete(*self.get_children())
 
+    def insert_row(self):
+        t = tuple([0 for x in range(len(self.structure_keys_list) - 1)])
+        self.insert('', 'end', text='None', values=t)
+
     def on_double_click(self, event):
         if self.entry_popup is not None:
             self.entry_popup.destroy()
@@ -70,6 +75,10 @@ class Table(ttk.Treeview):
         xi, yi, width, height = self.bbox(rowid, column)
         self.entry_popup = EntryPopup(self, rowid, column)
         self.entry_popup.geometry('%dx%d+%d+%d' % (width, 50, x + xi - (width - width) / 2, y + yi + (50 - height) / 2))
+
+    def on_delete(self, event):
+        for item in self.selection():
+            self.delete(item)
 
 
 class EntryPopup(tk.Toplevel):
