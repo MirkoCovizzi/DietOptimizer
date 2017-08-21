@@ -24,7 +24,6 @@ class Solver:
                 model += expressions_list
 
             model.solve()
-            print("Status:", pulp.LpStatus[model.status])
 
             for p in self.products:
                 var_output = {
@@ -35,22 +34,26 @@ class Solver:
 
             separator = {'product': '_____', 'quantity': ''}
             output_dict[name].append(separator)
-            calories = {'product': 'Total Calories (Kcal)', 'quantity': pulp.lpSum([self.products[p].varValue *
-                                                                                    float(self.foods.loc[p, 'Calories'])
-                                                                                    for p in self.products])}
+            status = {'product': 'Status', 'quantity': pulp.LpStatus[model.status]}
+            output_dict[name].append(status)
+            calories = {'product': 'Total Calories (Kcal)', 'quantity': round(sum([self.products[p].varValue *
+                                                                                          float(self.foods.loc[
+                                                                                                    p, 'Calories'])
+                                                                                          for p in self.products]), 2)}
             output_dict[name].append(calories)
-            carbohydrates = {'product': 'Total Carbohydrates (g)', 'quantity': pulp.lpSum([self.products[p].varValue *
-                                                                                           float(self.foods.loc[
-                                                                                                     p, 'Carbohydrates'])
-                                                                                           for p in self.products])}
+            carbohydrates = {'product': 'Total Carbohydrates (g)',
+                             'quantity': round(sum([self.products[p].varValue *
+                                                           float(self.foods.loc[p, 'Carbohydrates'])
+                                                           for p in self.products]), 2)}
             output_dict[name].append(carbohydrates)
-            proteins = {'product': 'Total Proteins (g)', 'quantity': pulp.lpSum([self.products[p].varValue *
-                                                                                 float(self.foods.loc[p, 'Proteins'])
-                                                                                 for p in self.products])}
+            proteins = {'product': 'Total Proteins (g)', 'quantity': round(sum([self.products[p].varValue *
+                                                                                       float(self.foods.loc[
+                                                                                                 p, 'Proteins'])
+                                                                                       for p in self.products]), 2)}
             output_dict[name].append(proteins)
-            fats = {'product': 'Total Fats (g)', 'quantity': pulp.lpSum([self.products[p].varValue *
-                                                                         float(self.foods.loc[p, 'Fats'])
-                                                                         for p in self.products])}
+            fats = {'product': 'Total Fats (g)', 'quantity': round(sum([self.products[p].varValue *
+                                                                               float(self.foods.loc[p, 'Fats'])
+                                                                               for p in self.products]), 2)}
             output_dict[name].append(fats)
             objective = {'product': 'Total Price (€)', 'quantity': round(pulp.value(model.objective), 2)}
             output_dict[name].append(objective)

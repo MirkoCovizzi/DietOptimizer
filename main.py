@@ -41,6 +41,7 @@ class Application(ttk.Frame):
         self.bind_all("<Control-s>", self.save_file)
         self.file_menu.entryconfig('Save', state="disabled")
         self.file_menu.add_command(label="Save As...", command=self.save_as_file)
+        self.file_menu.entryconfig('Save As...', state="disabled")
         self.file_menu.add_separator()
 
         self.constraints_menu = tk.Menu(self.menu_bar, tearoff=0)
@@ -57,6 +58,7 @@ class Application(ttk.Frame):
         self.edit_menu.add_command(label="Duplicate Selected Rows", command=self.duplicate_selected_rows,
                                    accelerator="Ctrl+D")
         self.edit_menu.add_command(label="Delete Selected Rows", command=self.delete_selected_rows, accelerator="Del")
+        self.bind_all("<Delete>", self.delete_selected_rows)
         self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
 
         self.run_menu = tk.Menu(self.menu_bar, tearoff=0)
@@ -70,6 +72,9 @@ class Application(ttk.Frame):
 
     def new_file(self, event=None):
         self.table.clear()
+        self.file_name = None
+        self.file_menu.entryconfig('Save', state="disabled")
+        self.menu_bar.entryconfig('Run', state="disabled")
         self.parent.title(default_file_name + ' - ' + application_name)
 
     def open_file(self, event=None):
@@ -82,6 +87,7 @@ class Application(ttk.Frame):
                 self.table.load_table(self.file_name)
                 self.parent.title(name + ' - ' + application_name)
                 self.file_menu.entryconfig('Save', state="normal")
+                self.file_menu.entryconfig('Save As...', state="normal")
                 self.menu_bar.entryconfig('Run', state="normal")
             except ValueError:
                 messagebox.showerror('Error', 'This file has a wrong table structure.')
@@ -102,18 +108,34 @@ class Application(ttk.Frame):
         if save_as_file_name is not '':
             self.table.save_table(save_as_file_name)
 
+            base = os.path.basename(save_as_file_name)
+            name = os.path.splitext(base)[0]
+
+            self.table.clear()
+            self.table.load_table(save_as_file_name)
+
+            self.parent.title(name + ' - ' + application_name)
+            self.file_menu.entryconfig('Save', state="normal")
+            self.file_menu.entryconfig('Save As...', state="normal")
+            self.menu_bar.entryconfig('Run', state="normal")
+
     def open_constraints_window(self):
         self.constraints_window = ConstraintsWindow(self, title='Constraints', button_text='OK',
                                                     structure={'text': 'Name', 'value': 'Value'})
 
     def insert_row(self, event=None):
         self.table.insert_row()
+        self.menu_bar.entryconfig('Run', state="normal")
+        self.file_menu.entryconfig('Save As...', state="normal")
 
     def duplicate_selected_rows(self, event=None):
         self.table.duplicate_selected_rows()
 
     def delete_selected_rows(self, event=None):
         self.table.delete_selected_rows()
+        if not self.table.get_children():
+            self.menu_bar.entryconfig('Run', state="disabled")
+            self.file_menu.entryconfig('Save As...', state="disabled")
 
     def run_solver(self):
         s = Solver(self.table.get_dataframe())

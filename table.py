@@ -34,7 +34,6 @@ class Table(ttk.Treeview):
         self.configure(yscrollcommand=scroll_bar.set)
         self.enable_popup()
         self.bind("<Control-d>", self.on_duplicate)
-        self.bind("<Delete>", self.on_delete)
 
     def load_table(self, file_name):
         self.dataframe = pandas.read_csv(file_name)
