@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from table import Table
+import json
 
 
 class ConstraintsWindow(tk.Toplevel):
@@ -8,18 +9,22 @@ class ConstraintsWindow(tk.Toplevel):
     def __init__(self, *args, **kwargs):
         tk.Toplevel.__init__(self, *args, **kwargs)
         self.title("Constraints")
-        self.minsize(width=400, height=300)
+        self.minsize(width=600, height=300)
 
         ttk.Button(self, text="Ok", command=self.ok_press).pack(side='bottom')
         self.table = Table(self, structure={'name': 'Name', 'value': 'Value'})
+        self.table.disable_first_column_popup()
 
-        week = ("monday", "tuesday", "Wednesday", "thursday", "friday", "saturday", "sunday")
-        for day in week:
-            day = self.table.insert("", week.index(day), day, text=day.title())
-            self.table.insert(day, 0, text="Minimum Calories", values=2000)
-            self.table.insert(day, 1, text="Carbohydrates (%)", values=50)
-            self.table.insert(day, 2, text="Proteins (%)", values=20)
-            self.table.insert(day, 3, text="Fats (%)", values=30)
+        with open('settings.json') as file:
+            settings = json.load(file)
+
+        name_list = list(settings.keys())
+        for name in name_list:
+            self.table.insert('', name.index(name), name, text=name.title())
+            constraint_list = settings[name]
+            for constraint in constraint_list:
+                i = constraint_list.index(constraint)
+                self.table.insert(name, i, text=settings[name][i]['text'], values=settings[name][i]['values'])
 
     def ok_press(self):
         self.destroy()

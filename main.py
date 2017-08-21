@@ -50,8 +50,9 @@ class Application(ttk.Frame):
         self.menu_bar.add_cascade(label="File", menu=self.file_menu)
 
         self.edit_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.edit_menu.add_command(label="Insert Row...", command=self.insert_row, accelerator="Ctrl+R")
+        self.edit_menu.add_command(label="Insert New Row", command=self.insert_row, accelerator="Ctrl+R")
         self.bind_all("<Control-r>", self.insert_row)
+        self.edit_menu.add_command(label="Delete Selected Rows", command=self.delete_selected_rows, accelerator="Del")
         self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
 
         self.run_menu = tk.Menu(self.menu_bar, tearoff=0)
@@ -94,6 +95,9 @@ class Application(ttk.Frame):
 
     def insert_row(self, event=None):
         self.table.insert_row()
+
+    def delete_selected_rows(self, event=None):
+        self.table.delete_selected_rows()
 
 
 def main(name):

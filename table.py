@@ -13,6 +13,7 @@ class Table(ttk.Treeview):
         self.structure = structure
         self.dataframe = None
         self.entry_popup = None
+        self.disabled_first_column_popup = False
         self.structure_keys_list = list(self.structure.keys())
         self['columns'] = tuple(self.structure_keys_list[1:])
         self.heading("#0", text=self.structure[self.structure_keys_list[0]], anchor='w')
@@ -64,6 +65,13 @@ class Table(ttk.Treeview):
         t = tuple([0 for x in range(len(self.structure_keys_list) - 1)])
         self.insert('', 'end', text='None', values=t)
 
+    def delete_selected_rows(self):
+        for item in self.selection():
+            self.delete(item)
+
+    def disable_first_column_popup(self):
+        self.disabled_first_column_popup = True
+
     def on_double_click(self, event):
         if self.entry_popup is not None:
             self.entry_popup.destroy()
@@ -71,14 +79,22 @@ class Table(ttk.Treeview):
         y = self.master.winfo_y()
         rowid = self.identify_row(event.y)
         column = self.identify_column(event.x)  # Returns '#N', where N is the number of the column
+        s = str(column).replace('#', '')  # Removes the character '#' from the column
+        col = int(s)
 
+        if rowid == '':
+            return
+
+        if col == 0:
+            if self.disabled_first_column_popup:
+                return
         xi, yi, width, height = self.bbox(rowid, column)
-        self.entry_popup = EntryPopup(self, rowid, column)
-        self.entry_popup.geometry('%dx%d+%d+%d' % (width, 50, x + xi - (width - width) / 2, y + yi + (50 - height) / 2))
+        self.entry_popup = EntryPopup(self, rowid, col)
+        self.entry_popup.geometry('%dx%d+%d+%d' % (width, 50, x + xi - (width - width) / 2,
+                                                   y + yi + (50 - height) / 2))
 
     def on_delete(self, event):
-        for item in self.selection():
-            self.delete(item)
+        self.delete_selected_rows()
 
 
 class EntryPopup(tk.Toplevel):
@@ -87,8 +103,6 @@ class EntryPopup(tk.Toplevel):
         self.parent_tree_view = parent_tree_view
         self.rowid = rowid
         self.column = column
-        s = str(self.column).replace('#', '')  # Removes the character '#' from the column
-        self.c = int(s)
         self.attributes("-toolwindow", 1)  # Removes Minimize and Maximize buttons
         self.title("Edit")
         self.resizable(width=0, height=0)
@@ -98,8 +112,8 @@ class EntryPopup(tk.Toplevel):
         self.entry = ttk.Entry(self, justify='center')
         self.entry.focus()
         self.entry.pack(side='top', fill=tk.BOTH, expand=1)
-        if self.c > 0:
-            self.set_value(self.parent_tree_view.item(rowid)['values'][self.c - 1])
+        if self.column > 0:
+            self.set_value(self.parent_tree_view.item(rowid)['values'][self.column - 1])
         else:
             self.set_value(self.parent_tree_view.item(rowid)['text'])
         self.entry.bind("<Return>", self.update_parent_tree_view)
@@ -108,9 +122,9 @@ class EntryPopup(tk.Toplevel):
         self.entry.insert(0, value)
 
     def update_parent_tree_view(self, event=None):
-        if self.c > 0:
+        if self.column > 0:
             values = self.parent_tree_view.item(self.rowid)['values']
-            values[self.c - 1] = self.entry.get()
+            values[self.column - 1] = self.entry.get()
             self.parent_tree_view.item(self.rowid, values=values)
         else:
             self.parent_tree_view.item(self.rowid, text=self.entry.get())
