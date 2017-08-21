@@ -56,7 +56,7 @@ class Application(ttk.Frame):
         self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
 
         self.run_menu = tk.Menu(self.menu_bar, tearoff=0)
-        self.run_menu.add_command(label="Run Solver")
+        self.run_menu.add_command(label="Get Optimal Diet...")
         self.menu_bar.add_cascade(label="Run", menu=self.run_menu)
         self.menu_bar.entryconfig('Run', state="disabled")
 

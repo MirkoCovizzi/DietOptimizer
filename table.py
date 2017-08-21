@@ -39,7 +39,6 @@ class Table(ttk.Treeview):
         columns_list = list(self.dataframe)
 
         if columns_list != [str(x).title() for x in self.structure_keys_list]:
-            print("test")
             return None
         for i in range(len(self.dataframe)):
             values = []
@@ -50,8 +49,7 @@ class Table(ttk.Treeview):
     def save_table(self, file_name):
         columns = [str(x).title() for x in self.structure_keys_list]
         names = [self.item(i)['text'] for i in self.get_children()]
-        series = []
-        series.append(names)
+        series = [names]
         series = series + [[self.item(i)['values'][j] for i in self.get_children()] for j in range(len(columns) - 1)]
         indices = [x for x in range(len(self.get_children()))]
         d = {col: pandas.Series(series[columns.index(col)], index=indices) for col in columns}
