@@ -2,8 +2,9 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import pandas
 
-struct = {'name': 'Name', 'quantity': 'Quantity (g)', 'calories': 'Calories (Kcal)',
-          'carbohydrates': 'Carbohydrates (g)', 'proteins': 'Proteins (g)', 'fats': 'Fats (g)', 'price': 'Price (€)'}
+struct = {'name': 'Name', 'serving size': 'Serving Size (g)', 'calories': 'Calories (Kcal)',
+          'carbohydrates': 'Carbohydrates (g)', 'proteins': 'Proteins (g)', 'fats': 'Fats (g)',
+          'salt': 'Salt (g)', 'price': 'Price (€)'}
 
 
 class Table(ttk.Treeview):
@@ -17,7 +18,7 @@ class Table(ttk.Treeview):
         self.structure_keys_list = list(self.structure.keys())
         self['columns'] = tuple(self.structure_keys_list[1:])
         self.heading("#0", text=self.structure[self.structure_keys_list[0]], anchor='w')
-        self.column("#0", anchor='w', width=100)
+        self.column("#0", anchor='w', width=200)
         self.pack(side='left', fill=tk.BOTH, expand=1)
 
         for column in self['columns']:
@@ -31,7 +32,8 @@ class Table(ttk.Treeview):
         scroll_bar = ttk.Scrollbar(self.master, orient="vertical", command=self.yview)
         scroll_bar.pack(side='right', fill='y')
         self.configure(yscrollcommand=scroll_bar.set)
-        self.bind("<Double-1>", self.on_double_click)
+        self.enable_popup()
+        self.bind("<Control-d>", self.on_duplicate)
         self.bind("<Delete>", self.on_delete)
 
     def load_table(self, file_name):
@@ -39,7 +41,7 @@ class Table(ttk.Treeview):
         columns_list = list(self.dataframe)
 
         if columns_list != [str(x).title() for x in self.structure_keys_list]:
-            return None
+            raise ValueError('Table mismatch')
         for i in range(len(self.dataframe)):
             values = []
             for j in range(len(self.structure_keys_list) - 1):
@@ -47,14 +49,18 @@ class Table(ttk.Treeview):
             self.insert('', i, text=self.dataframe.iloc[i][0], values=tuple(values))
 
     def save_table(self, file_name):
+        self.dataframe = self.get_dataframe()
+        self.dataframe.to_csv(file_name, index=False)
+
+    def get_dataframe(self):
         columns = [str(x).title() for x in self.structure_keys_list]
         names = [self.item(i)['text'] for i in self.get_children()]
         series = [names]
         series = series + [[self.item(i)['values'][j] for i in self.get_children()] for j in range(len(columns) - 1)]
         indices = [x for x in range(len(self.get_children()))]
         d = {col: pandas.Series(series[columns.index(col)], index=indices) for col in columns}
-        self.dataframe = pandas.DataFrame(d, columns=columns)
-        self.dataframe.to_csv(file_name, index=False)
+        df = pandas.DataFrame(d, columns=columns)
+        return df
 
     def clear(self):
         self.delete(*self.get_children())
@@ -63,12 +69,22 @@ class Table(ttk.Treeview):
         t = tuple([0 for x in range(len(self.structure_keys_list) - 1)])
         self.insert('', 'end', text='None', values=t)
 
+    def duplicate_selected_rows(self):
+        for item in self.selection():
+            self.insert('', 'end', text=self.item(item)['text'], values=self.item(item)['values'])
+
     def delete_selected_rows(self):
         for item in self.selection():
             self.delete(item)
 
     def disable_first_column_popup(self):
         self.disabled_first_column_popup = True
+
+    def enable_popup(self):
+        self.bind("<Double-1>", self.on_double_click)
+
+    def disable_popup(self):
+        self.unbind("<Double-1>")
 
     def on_double_click(self, event):
         if self.entry_popup is not None:
@@ -90,6 +106,9 @@ class Table(ttk.Treeview):
         self.entry_popup = EntryPopup(self, rowid, col)
         self.entry_popup.geometry('%dx%d+%d+%d' % (width, 50, x + xi - (width - width) / 2,
                                                    y + yi + (50 - height) / 2))
+
+    def on_duplicate(self, event):
+        self.duplicate_selected_rows()
 
     def on_delete(self, event):
         self.delete_selected_rows()
@@ -114,6 +133,8 @@ class EntryPopup(tk.Toplevel):
             self.set_value(self.parent_tree_view.item(rowid)['values'][self.column - 1])
         else:
             self.set_value(self.parent_tree_view.item(rowid)['text'])
+        self.entry.select_range(0, 'end')
+        self.entry.icursor('end')
         self.entry.bind("<Return>", self.update_parent_tree_view)
 
     def set_value(self, value):
@@ -127,3 +148,39 @@ class EntryPopup(tk.Toplevel):
         else:
             self.parent_tree_view.item(self.rowid, text=self.entry.get())
         self.destroy()
+
+
+class TableWindowView(tk.Toplevel):
+
+    def __init__(self, *args, parent=None, dictionary=None, title=None, structure=None, popup=True, button_text=None, **kwargs):
+        super(TableWindowView, self).__init__(*args, **kwargs)
+        self.title(title)
+        self.lift()
+        self.minsize(width=600, height=300)
+        self.dictionary = dictionary
+        self.structure = structure
+        self.button_text = button_text
+
+        if self.button_text is not None:
+            ttk.Button(self, text=self.button_text, command=self.on_button_press).pack(side='bottom')
+
+        self.table = Table(self, structure=structure)
+        if popup is False:
+            self.table.disable_popup()
+
+        if self.dictionary is not None:
+            self.load_dictionary()
+
+    def load_dictionary(self):
+        name_list = list(self.dictionary.keys())
+        for name in name_list:
+            self.table.insert('', 'end', name, text=name.title(), open=True)
+            item_list = self.dictionary[name]
+            for item in item_list:
+                i = item_list.index(item)
+                self.table.insert(name, i, text=self.dictionary[name][i][list(self.structure.keys())[0]],
+                                  values=[self.dictionary[name][i][list(self.structure.keys())[x]]
+                                          for x in range(1, len(self.structure))])
+
+    def on_button_press(self):
+        print('test')

@@ -1,41 +1,62 @@
-import tkinter as tk
-import tkinter.ttk as ttk
-from table import Table
+from table import TableWindowView
 import json
+import pulp
 
-settings_file = 'settings.json'
+settings_file = 'constraints.json'
 
 
-class ConstraintsWindow(tk.Toplevel):
+class ConstraintsWindow(TableWindowView):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, file_name=settings_file, **kwargs):
         super(ConstraintsWindow, self).__init__(*args, **kwargs)
-        self.title("Constraints")
-        self.minsize(width=600, height=300)
+        self.file_name = file_name
 
-        ttk.Button(self, text="Ok", command=self.ok_press).pack(side='bottom')
-        self.table = Table(self, structure={'name': 'Name', 'value': 'Value'})
-        self.table.disable_first_column_popup()
-        self.settings = None
-
-        with open(settings_file) as file:
+        with open(self.file_name) as file:
             self.settings = json.load(file)
 
-        name_list = list(self.settings.keys())
-        for name in name_list:
-            self.table.insert('', name.index(name), name, text=name.title())
-            constraint_list = self.settings[name]
-            for constraint in constraint_list:
-                i = constraint_list.index(constraint)
-                self.table.insert(name, i, text=self.settings[name][i]['text'], values=self.settings[name][i]['values'])
+        self.dictionary = self.settings
+        self.load_dictionary()
+        self.table.disable_first_column_popup()
 
-    def ok_press(self):
+    def on_button_press(self):
         name_list = self.table.get_children()
         for name in name_list:
             constraint_list = self.table.get_children(item=name)
             for constraint in constraint_list:
                 i = constraint_list.index(constraint)
-                self.settings[name][i]['values'] = self.table.item(constraint)['values']
+                self.settings[name][i]['value'] = self.table.item(constraint)['values'][0]
 
-        json.dump(self.settings, open(settings_file, 'w'), indent=4)
+        json.dump(self.settings, open(self.file_name, 'w'), indent=4)
         self.destroy()
+
+
+class Constraint:
+
+    def __init__(self, name, value, constraint_type):
+        self.name = name
+        self.value = value
+        self.constraint_type = constraint_type
+
+    @staticmethod
+    def get_constraints(products, foods, constraints_file='constraints.json'):
+        with open(constraints_file) as file:
+            constraints = json.load(file)
+
+        expressions_dict = {}
+        name_list = list(constraints.keys())
+        for name in name_list:
+            expressions_dict[name] = []
+            constraints_list = constraints[name]
+            for constraint in constraints_list:
+                i = constraints_list.index(constraint)
+                if constraints[name][i]['constraint_type'] == 'LE':
+                    expr = pulp.lpSum([products[food] * float(foods.loc[food, (constraints[name][i]['name']).title()])
+                            for food in foods.index]) <= float(constraints[name][i]['value'])
+                elif constraints[name][i]['constraint_type'] == 'GE':
+                    expr = pulp.lpSum([products[food] * float(foods.loc[food, (constraints[name][i]['name']).title()])
+                            for food in foods.index]) >= float(constraints[name][i]['value'])
+                elif constraints[name][i]['constraint_type'] == 'E':
+                    expr = pulp.lpSum([products[food] * float(foods.loc[food, (constraints[name][i]['name']).title()])
+                            for food in foods.index]) == float(constraints[name][i]['value'])
+                expressions_dict[name].append(expr)
+        return expressions_dict
