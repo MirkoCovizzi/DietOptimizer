@@ -16,6 +16,7 @@ class Table(ttk.Treeview):
         self.dataframe = None
         self.entry_popup = None
         self.disabled_first_column_popup = False
+
         self.structure_keys_list = list(self.structure.keys())
         self['columns'] = tuple(self.structure_keys_list[1:])
         self.heading("#0", text=self.structure[self.structure_keys_list[0]], anchor='w')
@@ -34,7 +35,6 @@ class Table(ttk.Treeview):
         scroll_bar.pack(side='right', fill='y')
         self.configure(yscrollcommand=scroll_bar.set)
         self.enable_popup()
-        self.bind("<Control-d>", self.on_duplicate)
 
     def load_table(self, file_name):
         self.dataframe = pandas.read_csv(file_name)
@@ -163,7 +163,7 @@ class TableOpenError(Exception):
 
 
 class TableWindowView(tk.Toplevel):
-    def __init__(self, *args, parent=None, dictionary=None, title=None, structure=None, popup=True, button_text=None,
+    def __init__(self, *args, parent=None, dictionary=None, title=None, structure=None, popup=True, button_text='OK',
                  **kwargs):
         super(TableWindowView, self).__init__(*args, **kwargs)
         self.title(title)

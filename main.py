@@ -14,6 +14,8 @@ class Application(ttk.Frame):
     def __init__(self, parent=None, **kwargs):
         ttk.Frame.__init__(self, **kwargs)
         self.parent = parent
+        self.parent.title(default_file_name + ' - ' + application_name)
+
         self.menu_bar = None
         self.file_menu = None
         self.constraints_menu = None
@@ -26,12 +28,11 @@ class Application(ttk.Frame):
         self.table_window_solution = None
         self.constraints_window = None
         self.entryPopup = None
+
         self.create_ui()
 
     def create_ui(self):
-        self.parent.title(default_file_name + ' - ' + application_name)
         self.menu_bar = tk.Menu(self)
-
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.file_menu.add_command(label="New", command=self.new_file, accelerator="Ctrl+N")
         self.bind_all("<Control-n>", self.new_file)
@@ -43,24 +44,21 @@ class Application(ttk.Frame):
         self.file_menu.add_command(label="Save As...", command=self.save_as_file)
         self.file_menu.entryconfig('Save As...', state="disabled")
         self.file_menu.add_separator()
-
         self.constraints_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.constraints_menu.add_command(label="Constraints...", command=self.open_constraints_window)
         self.file_menu.add_cascade(label="Settings", menu=self.constraints_menu)
         self.file_menu.add_separator()
-
         self.file_menu.add_command(label="Exit", command=self.quit)
         self.menu_bar.add_cascade(label="File", menu=self.file_menu)
-
         self.edit_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.edit_menu.add_command(label="Insert New Empty Row", command=self.insert_row, accelerator="Ctrl+I")
         self.bind_all("<Control-i>", self.insert_row)
         self.edit_menu.add_command(label="Duplicate Selected Rows", command=self.duplicate_selected_rows,
                                    accelerator="Ctrl+D")
+        self.bind_all("<Control-d>", self.duplicate_selected_rows)
         self.edit_menu.add_command(label="Delete Selected Rows", command=self.delete_selected_rows, accelerator="Del")
         self.bind_all("<Delete>", self.delete_selected_rows)
         self.menu_bar.add_cascade(label="Edit", menu=self.edit_menu)
-
         self.run_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.run_menu.add_command(label="Run Solver", command=self.run_solver, accelerator="Ctrl+R")
         self.menu_bar.add_cascade(label="Run", menu=self.run_menu)
@@ -122,7 +120,7 @@ class Application(ttk.Frame):
             self.menu_bar.entryconfig('Run', state="normal")
 
     def open_constraints_window(self):
-        self.constraints_window = ConstraintsWindow(self, title='Constraints', button_text='OK',
+        self.constraints_window = ConstraintsWindow(self, title='Constraints',
                                                     structure={'text': 'Name', 'value': 'Value'})
 
     def insert_row(self, event=None):
