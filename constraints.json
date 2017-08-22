@@ -15,13 +15,13 @@
         {
             "name": "carbohydrates",
             "text": "Minimum Carbohydrates (g)",
-            "value": 300,
+            "value": 250,
             "constraint_type": "GE"
         },
         {
             "name": "carbohydrates",
             "text": "Maximum Carbohydrates (g)",
-            "value": 10000000,
+            "value": 300,
             "constraint_type": "LE"
         },
         {
@@ -33,13 +33,19 @@
         {
             "name": "fats",
             "text": "Minimum Fats (g)",
-            "value": 30,
+            "value": 50,
             "constraint_type": "GE"
+        },
+        {
+            "name": "fats",
+            "text": "Maximum Fats (g)",
+            "value": 80,
+            "constraint_type": "LE"
         },
         {
             "name": "salt",
             "text": "Maximum Salt (g)",
-            "value": 6000,
+            "value": 6,
             "constraint_type": "LE"
         }
     ]

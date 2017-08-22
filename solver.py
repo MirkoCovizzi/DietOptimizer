@@ -30,18 +30,19 @@ class Solver:
                     'product': p,
                     'quantity': self.products[p].varValue,
                 }
+                # if self.products[p].varValue > 0:
                 output_dict[name].append(var_output)
 
             separator = {'product': '_____', 'quantity': ''}
             output_dict[name].append(separator)
-            status = {'product': 'Status', 'quantity': pulp.LpStatus[model.status]}
+            status = {'product': 'Status:', 'quantity': pulp.LpStatus[model.status]}
             output_dict[name].append(status)
-            calories = {'product': 'Total Calories (Kcal)', 'quantity': round(sum([self.products[p].varValue *
+            calories = {'product': 'Total Calories (Kcal):', 'quantity': round(sum([self.products[p].varValue *
                                                                                           float(self.foods.loc[
                                                                                                     p, 'Calories'])
                                                                                           for p in self.products]), 2)}
             output_dict[name].append(calories)
-            carbohydrates = {'product': 'Total Carbohydrates (g)',
+            carbohydrates = {'product': 'Total Carbohydrates (g):',
                              'quantity': round(sum([self.products[p].varValue *
                                                            float(self.foods.loc[p, 'Carbohydrates'])
                                                            for p in self.products]), 2)}
@@ -51,11 +52,15 @@ class Solver:
                                                                                                  p, 'Proteins'])
                                                                                        for p in self.products]), 2)}
             output_dict[name].append(proteins)
-            fats = {'product': 'Total Fats (g)', 'quantity': round(sum([self.products[p].varValue *
+            fats = {'product': 'Total Fats (g):', 'quantity': round(sum([self.products[p].varValue *
                                                                                float(self.foods.loc[p, 'Fats'])
                                                                                for p in self.products]), 2)}
             output_dict[name].append(fats)
-            objective = {'product': 'Total Price (€)', 'quantity': round(pulp.value(model.objective), 2)}
+            salt = {'product': 'Total Salt (g):', 'quantity': round(sum([self.products[p].varValue *
+                                                                               float(self.foods.loc[p, 'Salt'])
+                                                                               for p in self.products]), 2)}
+            output_dict[name].append(salt)
+            objective = {'product': 'Total Price (€):', 'quantity': round(pulp.value(model.objective), 2)}
             output_dict[name].append(objective)
 
         return output_dict

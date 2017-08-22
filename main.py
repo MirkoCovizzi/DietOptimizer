@@ -151,7 +151,7 @@ class Application(ttk.Frame):
 def main(name):
     root = tk.Tk()
     root.title(name)
-    root.minsize(width=1000, height=500)
+    root.minsize(width=1300, height=500)
     Application(parent=root)
     root.mainloop()
 

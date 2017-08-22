@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import pandas
 
-struct = {'name': 'Name', 'serving size': 'Serving Size (g)', 'calories': 'Calories (Kcal)',
+struct = {'name': 'Name', 'serving size': 'Serving Size (g/ml)', 'calories': 'Calories (Kcal)',
           'carbohydrates': 'Carbohydrates (g)', 'proteins': 'Proteins (g)', 'fats': 'Fats (g)',
           'salt': 'Salt (g)', 'price': 'Price (€)'}
 
@@ -18,7 +18,7 @@ class Table(ttk.Treeview):
         self.structure_keys_list = list(self.structure.keys())
         self['columns'] = tuple(self.structure_keys_list[1:])
         self.heading("#0", text=self.structure[self.structure_keys_list[0]], anchor='w')
-        self.column("#0", anchor='w', width=200)
+        self.column("#0", anchor='w', width=300)
         self.pack(side='left', fill=tk.BOTH, expand=1)
 
         for column in self['columns']:
@@ -182,4 +182,4 @@ class TableWindowView(tk.Toplevel):
                                           for x in range(1, len(self.structure))])
 
     def on_button_press(self):
-        print('test')
+        pass
