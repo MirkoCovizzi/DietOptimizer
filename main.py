@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog, messagebox
 from constraints import ConstraintsWindow
-from table import Table, TableWindowView
+from table import Table, TableWindowView, TableOpenError
 import os
 from solver import Solver
 
@@ -89,8 +89,10 @@ class Application(ttk.Frame):
                 self.file_menu.entryconfig('Save', state="normal")
                 self.file_menu.entryconfig('Save As...', state="normal")
                 self.menu_bar.entryconfig('Run', state="normal")
-            except ValueError:
+            except TableOpenError:
                 messagebox.showerror('Error', 'This file has a wrong table structure.')
+            except ValueError:
+                messagebox.showerror('Error', 'At least one table cell contains a string value instead of a float.')
 
     def save_file(self, event=None):
         if self.file_name is not None:

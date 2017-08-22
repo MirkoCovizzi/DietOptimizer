@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 import pandas
+from tkinter import messagebox
 
 struct = {'name': 'Name', 'serving size': 'Serving Size (g/ml)', 'calories': 'Calories (Kcal)',
           'carbohydrates': 'Carbohydrates (g)', 'proteins': 'Proteins (g)', 'fats': 'Fats (g)',
@@ -40,12 +41,16 @@ class Table(ttk.Treeview):
         columns_list = list(self.dataframe)
 
         if columns_list != [str(x).title() for x in self.structure_keys_list]:
-            raise ValueError('Table mismatch')
+            raise TableOpenError('Table mismatch')
+        inserts = []
         for i in range(len(self.dataframe)):
             values = []
             for j in range(len(self.structure_keys_list) - 1):
-                values.append(self.dataframe.iloc[i][j + 1])
-            self.insert('', i, text=self.dataframe.iloc[i][0], values=tuple(values))
+                values.append(round(float(self.dataframe.iloc[i][j + 1]), 6))
+            inserts.append(values)
+
+        for i in range(len(inserts)):
+            self.insert('', i, text=self.dataframe.iloc[i][0], values=tuple(inserts[i]))
 
     def save_table(self, file_name):
         self.dataframe = self.get_dataframe()
@@ -141,17 +146,25 @@ class EntryPopup(tk.Toplevel):
 
     def update_parent_tree_view(self, event=None):
         if self.column > 0:
-            values = self.parent_tree_view.item(self.rowid)['values']
-            values[self.column - 1] = self.entry.get()
-            self.parent_tree_view.item(self.rowid, values=values)
+            try:
+                values = self.parent_tree_view.item(self.rowid)['values']
+                values[self.column - 1] = round(float(self.entry.get()), 6)
+                self.parent_tree_view.item(self.rowid, values=values)
+            except ValueError:
+                messagebox.showerror("Error", "Can't insert a string value in this position.")
         else:
             self.parent_tree_view.item(self.rowid, text=self.entry.get())
         self.destroy()
 
 
-class TableWindowView(tk.Toplevel):
+class TableOpenError(Exception):
+    def __init__(self, message):
+        self.message = message
 
-    def __init__(self, *args, parent=None, dictionary=None, title=None, structure=None, popup=True, button_text=None, **kwargs):
+
+class TableWindowView(tk.Toplevel):
+    def __init__(self, *args, parent=None, dictionary=None, title=None, structure=None, popup=True, button_text=None,
+                 **kwargs):
         super(TableWindowView, self).__init__(*args, **kwargs)
         self.title(title)
         self.lift()
